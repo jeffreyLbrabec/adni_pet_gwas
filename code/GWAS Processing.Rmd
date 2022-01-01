@@ -1,0 +1,44 @@
+---
+title: "Process GWAS Data"
+output: html_notebook
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+library(tidyverse)
+library(ADNIMERGE)
+library(here)
+
+#ADNI_MERGE processing to get Caucasian ADNI 1 GWAS samples w/imaging data
+
+#First, read in the samples from the .fam plink file to get the FIDs
+
+a2_fam <- read_delim(here("data/ADNI_2_MERGE.fam"), delim = "\t", col_names = FALSE)
+
+
+#Read in ADNIMERGE data. There will be problems with the tau and abeta columns parsing correctly but we aren't worried about those so its okay if they throw parsing errors for now I should work on parsing those correctly in the future
+
+a2_fdg_patients <- adnimerge %>% 
+  filter(ORIGPROT == "ADNI2", 
+         PTETHCAT == "Not Hisp/Latino",
+         PTRACCAT == "White",
+         VISCODE == "bl",
+         !is.na(FDG.bl)) %>%
+  mutate(PTID = as.character(PTID)) %>% 
+  select(PTID)
+
+a2_fam %>% 
+  inner_join(a2_fdg_patients, by = c("X2" = "PTID")) %>% 
+  select(X1, X2) %>% 
+  write_delim(here("data/am2_caucasian_keep_ids_updated.txt"), delim = "\t", col_names = FALSE)
+
+a2_ids <- read_delim(here("data/am2_caucasian_keep_ids.txt"), delim = "\t", col_names = FALSE)
+```
+
+## Sex Checking
+```{r}
+sexcheck <- read.table(here("data/CAUC_sex_checking.sexcheck"), header = TRUE)
+plot(sexcheck$F, main = "Sex Distribution", xlab = "Sample", ylab = "F Score") 
+```
+
