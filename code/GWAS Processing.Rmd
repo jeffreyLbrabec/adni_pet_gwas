@@ -41,4 +41,27 @@ a2_ids <- read_delim(here("data/am2_caucasian_keep_ids.txt"), delim = "\t", col_
 sexcheck <- read.table(here("data/CAUC_sex_checking.sexcheck"), header = TRUE)
 plot(sexcheck$F, main = "Sex Distribution", xlab = "Sample", ylab = "F Score") 
 ```
+## Duplicate Checking
+```{r}
+dups <- read.table(here("data/duplicates.genome"), header = TRUE)
 
+#Relatedness of samples. I might want to exclude these samples
+problem_pairs <- dups %>% 
+  filter(PI_HAT > 0.4)
+  
+problem_pairs %>% 
+  select(FID1, IID1) %>% 
+  filter(!duplicated(IID1)) %>% 
+  write_delim(here("data/AD_excluded.txt"), delim = "\t", col_names = FALSE)
+
+#Populations --> PI hat values are much smaller now that populations have been stratified
+problem_pairs_small <- dups %>% 
+  filter(PI_HAT > 0.05) %>% 
+  select(FID1, IID1, FID2, IID2, PI_HAT)
+myvars <- c("FID1", "IID1", "FID2", "IID2", "PI_HAT")
+problem_pairs[myvars]
+
+## It looks like 2 135_S_4722 and 2 135_S_4723 is the common baddie
+```
+
+## Need to make the phenotype table for the FDG pet data
